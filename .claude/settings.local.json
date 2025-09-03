@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(\"C:\\Users\\User\\Documents\\projects\\tennis_fr\\venv\\Scripts\\python.exe\" :*)",
+      "mcp__github__get_me",
+      "mcp__github__search_repositories",
+      "mcp__github__list_branches",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "Bash(git rm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

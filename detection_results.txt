@@ -1,0 +1,30 @@
+Building Number Detection Results
+========================================
+
+20.jpg:
+  Number: 20 (confidence: 94.8%)
+
+34.jpg:
+  No numbers detected
+
+34_extra_zoomed.jpg:
+  Number: 34 (confidence: 100.0%)
+
+34_zoomed.jpg:
+  No numbers detected
+
+36.jpg:
+  Number: 36 (confidence: 100.0%)
+
+40.jpg:
+  Number: 40 (confidence: 100.0%)
+  Number: 40 (confidence: 100.0%)
+
+68_64.jpg:
+  Number: 64 (confidence: 100.0%)
+  Number: 68 (confidence: 100.0%)
+  Number: 62 (confidence: 99.9%)
+
+84.jpg:
+  Number: 84 (confidence: 100.0%)
+
