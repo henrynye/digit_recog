@@ -11,6 +11,8 @@ import numpy as np
 from pathlib import Path
 from typing import List, Tuple, Optional
 import re
+import argparse
+import sys
 
 
 class BuildingNumberDetector:
@@ -141,32 +143,201 @@ class BuildingNumberDetector:
         return results
 
 
-def main():
-    """Example usage"""
-    # Initialize detector
-    detector = BuildingNumberDetector()
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="Detect building numbers in images using EasyOCR",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Process specific images
+  python building_number_detector.py -i image1.jpg image2.jpg image3.jpg
+  
+  # Process a folder with custom confidence threshold
+  python building_number_detector.py -f example_images --confidence 0.9
+  
+  # Save detailed results to a file
+  python building_number_detector.py -i house1.jpg -o results.txt --detailed
+  
+  # Run with verbose output and custom languages
+  python building_number_detector.py -f photos/ --verbose --languages en es
+        """
+    )
     
-    # Test on example images
-    if Path("example_images").exists():
-        print("Testing building number detection on example images...")
-        results = detector.process_batch("example_images", "detection_results.txt")
+    # Input options (mutually exclusive)
+    input_group = parser.add_mutually_exclusive_group(required=False)
+    input_group.add_argument(
+        '-i', '--images', 
+        nargs='+',
+        help='Specific image files to process'
+    )
+    input_group.add_argument(
+        '-f', '--folder',
+        help='Folder containing images to process (default: example_images)'
+    )
+    
+    # Output options
+    parser.add_argument(
+        '-o', '--output',
+        help='Output file to save results (default: print to console)'
+    )
+    parser.add_argument(
+        '--detailed',
+        action='store_true',
+        help='Show detailed results including confidence scores and bounding boxes'
+    )
+    
+    # Detection parameters
+    parser.add_argument(
+        '--confidence',
+        type=float,
+        default=0.8,
+        help='Minimum confidence threshold (0.0-1.0, default: 0.8)'
+    )
+    parser.add_argument(
+        '--digits-only',
+        action='store_true',
+        default=True,
+        help='Only return results containing digits (default: True)'
+    )
+    parser.add_argument(
+        '--include-text',
+        action='store_true',
+        help='Include non-numeric text in results'
+    )
+    
+    # Model parameters
+    parser.add_argument(
+        '--languages',
+        nargs='+',
+        default=['en'],
+        help='Language codes for OCR (default: en)'
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable verbose output during model loading'
+    )
+    
+    return parser.parse_args()
+
+
+def process_single_images(detector, image_paths, args):
+    """Process individual image files"""
+    results = {}
+    
+    for image_path in image_paths:
+        path = Path(image_path)
+        if not path.exists():
+            print(f"Warning: {image_path} not found")
+            continue
+            
+        print(f"Processing {path.name}...")
         
-        print(f"\nProcessed {len(results)} images")
-        print("Results saved to detection_results.txt")
+        # Get detection results
+        detections = detector.detect_numbers(
+            str(path), 
+            min_confidence=args.confidence,
+            digits_only=not args.include_text
+        )
         
-        # Show summary
+        results[path.name] = detections
+    
+    return results
+
+
+def display_results(results, args):
+    """Display or save results based on arguments"""
+    output_lines = []
+    
+    if args.detailed:
+        output_lines.append("Building Number Detection Results (Detailed)")
+        output_lines.append("=" * 50)
+        output_lines.append("")
+        
+        for filename, detections in results.items():
+            output_lines.append(f"{filename}:")
+            
+            if detections:
+                for i, det in enumerate(detections, 1):
+                    output_lines.append(f"  Detection {i}:")
+                    output_lines.append(f"    Text: '{det['text']}'")
+                    output_lines.append(f"    Digits: {det['digits'] or 'None'}")
+                    output_lines.append(f"    Confidence: {det['confidence']:.1%}")
+                    if 'bbox' in det:
+                        bbox = det['bbox']
+                        output_lines.append(f"    Bounding box: {bbox}")
+                    output_lines.append("")
+            else:
+                output_lines.append("  No detections found")
+                output_lines.append("")
+    else:
+        # Simple summary format
+        output_lines.append("Building Number Detection Results")
+        output_lines.append("=" * 40)
+        output_lines.append("")
+        
         for filename, detections in results.items():
             numbers = [det['digits'] for det in detections if det['digits']]
             if numbers:
-                print(f"{filename}: {', '.join(numbers)}")
+                confidence_info = ""
+                if len(detections) == 1:
+                    confidence_info = f" (confidence: {detections[0]['confidence']:.1%})"
+                output_lines.append(f"{filename}: {', '.join(numbers)}{confidence_info}")
             else:
-                print(f"{filename}: No numbers detected")
+                output_lines.append(f"{filename}: No numbers detected")
+    
+    # Output results
+    output_text = "\n".join(output_lines)
+    
+    if args.output:
+        with open(args.output, 'w') as f:
+            f.write(output_text)
+        print(f"Results saved to {args.output}")
     else:
-        print("No example_images folder found")
+        print(output_text)
+
+
+def main():
+    """Main CLI entry point"""
+    args = parse_args()
+    
+    # Handle confidence validation
+    if not (0.0 <= args.confidence <= 1.0):
+        print("Error: Confidence must be between 0.0 and 1.0")
+        sys.exit(1)
+    
+    # Initialize detector
+    print("Initializing EasyOCR...")
+    detector = BuildingNumberDetector(
+        languages=args.languages,
+        verbose=args.verbose
+    )
+    
+    # Determine what to process
+    if args.images:
+        # Process specific images
+        print(f"Processing {len(args.images)} specific images...")
+        results = process_single_images(detector, args.images, args)
         
-    # Example of single image processing
-    # numbers = detector.get_building_numbers("path/to/building.jpg")
-    # print(f"Detected building numbers: {numbers}")
+    else:
+        # Process folder
+        folder = args.folder if args.folder else "example_images"
+        folder_path = Path(folder)
+        
+        if not folder_path.exists():
+            print(f"Error: Folder '{folder}' not found")
+            sys.exit(1)
+        
+        print(f"Processing images in folder: {folder}")
+        results = detector.process_batch(folder, None)  # Don't auto-save, we'll handle output
+    
+    # Display results
+    if results:
+        print(f"\nProcessed {len(results)} images")
+        display_results(results, args)
+    else:
+        print("No images were processed successfully")
 
 
 if __name__ == "__main__":

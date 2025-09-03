@@ -34,7 +34,38 @@ source venv/bin/activate  # Linux/Mac
 pip install easyocr
 ```
 
-### 2. Basic Usage
+### 2. Command Line Usage
+
+#### Process Specific Images
+```bash
+# Process individual images
+python building_number_detector.py -i house1.jpg house2.jpg house3.jpg
+
+# Process with custom confidence threshold
+python building_number_detector.py -i building.jpg --confidence 0.9
+
+# Save detailed results to file
+python building_number_detector.py -i house.jpg --detailed -o results.txt
+```
+
+#### Process Image Folders
+```bash
+# Process all images in a folder
+python building_number_detector.py -f example_images
+
+# Process folder with high confidence threshold
+python building_number_detector.py -f photos/ --confidence 0.95
+
+# Include non-numeric text in results
+python building_number_detector.py -f images/ --include-text
+```
+
+#### Get Help
+```bash
+python building_number_detector.py --help
+```
+
+### 3. Python API Usage
 ```python
 from building_number_detector import BuildingNumberDetector
 
@@ -51,7 +82,7 @@ for det in detections:
     print(f"Number: {det['digits']} (confidence: {det['confidence']:.1%})")
 ```
 
-### 3. Batch Processing
+### 4. Batch Processing
 ```python
 # Process all images in a folder
 results = detector.process_batch("images/", "results.txt")
@@ -81,6 +112,19 @@ digit_recog/
 - **Production Ready**: Error handling and logging included
 
 ## 📋 API Reference
+
+### Command Line Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-i, --images` | Specific image files to process | - |
+| `-f, --folder` | Folder containing images | example_images |
+| `-o, --output` | Output file to save results | Print to console |
+| `--detailed` | Show detailed results with bounding boxes | False |
+| `--confidence` | Minimum confidence threshold (0.0-1.0) | 0.8 |
+| `--include-text` | Include non-numeric text in results | False |
+| `--languages` | Language codes for OCR | en |
+| `--verbose` | Enable verbose model loading | False |
 
 ### BuildingNumberDetector Class
 
