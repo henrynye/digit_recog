@@ -48,6 +48,24 @@ python building_number_detector.py -i building.jpg --confidence 0.9
 python building_number_detector.py -i house.jpg --detailed -o results.txt
 ```
 
+#### Expected Number Detection ⭐ New Feature
+```bash
+# Check if a specific number exists in an image
+python building_number_detector.py -i house.jpg --expected-number 123
+
+# Check with detailed output showing confidence and method used
+python building_number_detector.py -i house.jpg --expected-number 42 --detailed
+
+# Batch process looking for a specific number
+python building_number_detector.py -f photos/ --expected-number 256
+
+# Adjust detection sensitivity
+python building_number_detector.py -i house.jpg --expected-number 99 --fuzzy-threshold 0.9
+
+# Use OCR-only mode (disable template matching)
+python building_number_detector.py -i house.jpg --expected-number 77 --disable-template-matching
+```
+
 #### Process Image Folders
 ```bash
 # Process all images in a folder
@@ -66,6 +84,8 @@ python building_number_detector.py --help
 ```
 
 ### 3. Python API Usage
+
+#### Regular Number Detection
 ```python
 from building_number_detector import BuildingNumberDetector
 
@@ -80,6 +100,33 @@ print(f"Building numbers: {numbers}")
 detections = detector.detect_numbers("path/to/building.jpg")
 for det in detections:
     print(f"Number: {det['digits']} (confidence: {det['confidence']:.1%})")
+```
+
+#### Expected Number Detection ⭐ New
+```python
+from building_number_detector import BuildingNumberDetector
+
+# Initialize detector
+detector = BuildingNumberDetector()
+
+# Check if a specific number exists in the image
+result = detector.check_for_expected_number("house.jpg", "123")
+
+print(f"Expected number '123' found: {result['found']}")
+print(f"Confidence: {result['confidence']:.1%}")
+print(f"Detection method: {result['method']}")
+
+if result['found']:
+    print(f"Best match: '{result['best_match']}'")
+    print(f"Location: {result['location']}")
+
+# Use with custom thresholds
+result = detector.check_for_expected_number(
+    "house.jpg", "456", 
+    fuzzy_threshold=0.9, 
+    template_threshold=0.8,
+    use_template_matching=False  # OCR-only mode
+)
 ```
 
 ### 4. Batch Processing
@@ -105,6 +152,9 @@ digit_recog/
 ## 🛠 Features
 
 - **High Accuracy**: 83% success rate on building images
+- **Expected Number Detection**: Check if a specific number exists with confidence scoring
+- **Hybrid Detection Methods**: Combines OCR + fuzzy matching + template matching
+- **Smart Error Correction**: Handles common OCR errors (O→0, l→1, etc.)
 - **Simple API**: Easy-to-use Python class interface
 - **Batch Processing**: Process multiple images at once
 - **Confidence Scores**: Get detection confidence levels
@@ -125,6 +175,10 @@ digit_recog/
 | `--include-text` | Include non-numeric text in results | False |
 | `--languages` | Language codes for OCR | en |
 | `--verbose` | Enable verbose model loading | False |
+| `--expected-number` | Specific number to search for with confidence | - |
+| `--fuzzy-threshold` | Minimum similarity for fuzzy matching (0.0-1.0) | 0.8 |
+| `--template-threshold` | Minimum confidence for template matching (0.0-1.0) | 0.7 |
+| `--disable-template-matching` | Disable template matching fallback | False |
 
 ### BuildingNumberDetector Class
 
@@ -139,6 +193,9 @@ Simple interface returning just the detected numbers as strings.
 
 #### `process_batch(image_folder, output_file=None)`
 Process multiple images in a folder, optionally saving results to file.
+
+#### `check_for_expected_number(image_path, expected_number, fuzzy_threshold=0.8, template_threshold=0.7, use_template_matching=True)` ⭐ New
+Check if a specific expected number exists in the image with confidence scoring. Returns detailed results including detection method used and confidence level.
 
 ## 🔧 Configuration Options
 
