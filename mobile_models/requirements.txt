@@ -1,0 +1,8 @@
+# Mobile inference requirements
+onnxruntime>=1.22.0  # Core inference engine (12-20MB)
+numpy>=1.21.0        # Numerical operations
+opencv-python>=4.5.0  # Image processing (can be replaced with PIL for smaller size)
+
+# For minimal mobile deployment, consider:
+# onnxruntime-mobile  # Even smaller runtime for mobile devices
+# Pillow              # Lighter alternative to opencv-python
