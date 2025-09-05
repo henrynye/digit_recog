@@ -13,6 +13,8 @@ from typing import List, Tuple, Optional
 import re
 import argparse
 import sys
+import warnings
+from tqdm import tqdm
 
 # Import our custom modules
 from fuzzy_matcher import FuzzyMatcher
@@ -30,6 +32,9 @@ class BuildingNumberDetector:
             languages: List of language codes (default: ['en'])
             verbose: Enable verbose output during model loading
         """
+        # Suppress pin_memory warning on MPS (Apple Silicon)
+        warnings.filterwarnings("ignore", message=".*pin_memory.*not supported on MPS.*")
+        
         self.reader = easyocr.Reader(languages, verbose=verbose)
         self.fuzzy_matcher = FuzzyMatcher(enable_ocr_corrections=True)
         self.template_matcher = TemplateMatcher()
@@ -246,8 +251,8 @@ class BuildingNumberDetector:
         extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff']
         
         for ext in extensions:
-            for image_path in folder_path.glob(ext):
-                print(f"Processing {image_path.name}...")
+            image_list = list(folder_path.glob(ext))
+            for image_path in tqdm(image_list, desc=f"Processing {ext}", total=len(image_list)):
                 detections = self.detect_numbers(str(image_path))
                 results[image_path.name] = detections
         
