@@ -1,1 +1,4 @@
 venv/*
+predicted_digits/*
+daily_images/*
+shipment_validation/**/*.jpg
