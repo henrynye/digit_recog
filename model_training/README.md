@@ -42,7 +42,7 @@ python train_detector.py
 ```
 
 The script will:
-- Use the dataset from `../data/dataset/`
+- Use the dataset from `model_training/data/`
 - Save trained models to `../models/building_number_detector/`
 - Generate training plots and metrics
 
@@ -64,7 +64,7 @@ This script will:
 
 ### Dataset Statistics
 
-**Current Dataset (in `data/dataset/`):**
+**Current Dataset (in `model_training/data/`):**
 - **Training**: 912 images, 912 labels
 - **Validation**: 228 images, 228 labels
 - **Classes**: 1 (building numbers)
@@ -82,7 +82,7 @@ This script will:
 This structure represents a cleanup from the previous organization:
 
 ### What Changed:
-1. **Consolidated Dataset**: Single `data/dataset/` location instead of scattered intermediate directories
+1. **Consolidated Dataset**: Single `data/` location instead of scattered intermediate directories
 2. **Organized Scripts**: All training scripts moved to `scripts/` directory
 3. **Archived Intermediates**: Original processing directories moved to `archive/` for reference
 4. **Updated Paths**: All scripts updated to work with the new relative paths

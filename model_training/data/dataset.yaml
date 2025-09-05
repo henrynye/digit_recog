@@ -1,5 +1,5 @@
 # Building Number Detection Dataset
-path: /Users/henrynye/Documents/Repositories/digit_recog/model_training/data/dataset
+path: /Users/henrynye/Documents/Repositories/digit_recog/model_training/data
 train: images/train
 val: images/val
 

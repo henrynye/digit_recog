@@ -24,7 +24,7 @@ def train_detection_model():
         print("Using CPU training")
     
     # Define paths
-    dataset_yaml = Path("../data/dataset/dataset.yaml")
+    dataset_yaml = Path("model_training/data/dataset.yaml")
     output_dir = Path("../models")
     
     # Create output directory

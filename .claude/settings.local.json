@@ -17,7 +17,8 @@
       "Bash(python:*)",
       "Bash(tree:*)",
       "Bash(cat:*)",
-      "Bash(yolo:*)"
+      "Bash(yolo:*)",
+      "Read(//Users/henrynye/Documents/Repositories/**)"
     ],
     "deny": [],
     "ask": []

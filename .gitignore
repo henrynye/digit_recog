@@ -7,3 +7,5 @@ model_training/**/*.txt
 model_training/**/*.cache
 **/*.pyc
 **/*.DS_Store
+property_identifier/*
+__pycache__/*

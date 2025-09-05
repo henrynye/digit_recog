@@ -211,7 +211,7 @@ def main():
     positive_dir = Path("../archive/positive")
     negative_dir = Path("../archive/negative") 
     annotations_dir = Path("../archive/annotations")
-    dataset_dir = Path("../data/dataset")
+    dataset_dir = Path("model_training/data")
     
     # Validate inputs
     if not positive_dir.exists():

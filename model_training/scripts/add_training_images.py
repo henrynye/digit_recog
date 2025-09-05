@@ -29,14 +29,15 @@ import argparse
 import sys
 
 # Import existing modules
+# Add parent directory to path (digit_recog root)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from building_number_detector import BuildingNumberDetector
-from organize_by_digits import ImageOrganizer
 
 
 class TrainingDatasetExpander:
     """Expands existing YOLO training dataset with new images"""
     
-    def __init__(self, new_images_dir: str, dataset_dir: str = "../data/dataset"):
+    def __init__(self, new_images_dir: str, dataset_dir: str = "model_training/data"):
         """
         Initialize the dataset expander
         
@@ -49,8 +50,7 @@ class TrainingDatasetExpander:
         
         # Working directories
         self.temp_dir = Path("temp_processing")
-        self.results_file = self.temp_dir / "detection_results.txt"
-        self.organized_dir = self.temp_dir / "organized_images"
+        self.results_file = self.temp_dir / "validation_results.txt"
         self.positive_dir = self.temp_dir / "positive"
         self.negative_dir = self.temp_dir / "negative"
         self.annotations_dir = self.temp_dir / "annotations"
@@ -77,7 +77,6 @@ class TrainingDatasetExpander:
         
         directories = [
             self.temp_dir,
-            self.organized_dir,
             self.positive_dir,
             self.negative_dir,
             self.annotations_dir
@@ -152,27 +151,6 @@ class TrainingDatasetExpander:
         
         print(f"Detection complete: {self.stats['images_with_numbers']} with numbers, "
               f"{self.stats['images_without_numbers']} without")
-    
-    def organize_images_by_digits(self):
-        """Step 2: Organize images by detected digits"""
-        print("Step 2: Organizing images by detected digits...")
-        
-        # Use the existing ImageOrganizer
-        organizer = ImageOrganizer(
-            results_file=str(self.results_file),
-            source_dir=str(self.new_images_dir),
-            output_dir=str(self.organized_dir)
-        )
-        organizer.organize()
-        
-        # Count organized results
-        digit_dirs = [d for d in self.organized_dir.iterdir() if d.is_dir() and d.name != 'no_numbers']
-        no_numbers_dir = self.organized_dir / 'no_numbers'
-        
-        print(f"Images organized into {len(digit_dirs)} digit directories")
-        if no_numbers_dir.exists():
-            no_number_count = len(list(no_numbers_dir.glob("*.jpg")))
-            print(f"Found {no_number_count} images with no detections")
     
     def classify_positive_negative_samples(self, 
                                          min_digit_length: int = 1,
@@ -481,23 +459,22 @@ class TrainingDatasetExpander:
             # Execute pipeline
             self.setup_working_directories()
             self.detect_numbers_in_images()
-            self.organize_images_by_digits()
-            self.classify_positive_negative_samples(
-                min_digit_length=min_digit_length,
-                max_digit_length=max_digit_length,
-                exclude_single_digits=exclude_single_digits
-            )
-            self.create_bbox_annotations()
-            self.add_to_existing_dataset(train_ratio=train_ratio)
-            self.clean_cache_files()
+            # self.classify_positive_negative_samples(
+            #     min_digit_length=min_digit_length,
+            #     max_digit_length=max_digit_length,
+            #     exclude_single_digits=exclude_single_digits
+            # )
+            # self.create_bbox_annotations()
+            # self.add_to_existing_dataset(train_ratio=train_ratio)
+            # self.clean_cache_files()
             
-            # Verify and summarize
-            if self.verify_dataset_integrity():
-                print("✅ Dataset integrity verified")
-            else:
-                print("⚠️ Dataset integrity issues detected")
+            # # Verify and summarize
+            # if self.verify_dataset_integrity():
+            #     print("✅ Dataset integrity verified")
+            # else:
+            #     print("⚠️ Dataset integrity issues detected")
             
-            self.print_summary()
+            # self.print_summary()
             
         except Exception as e:
             print(f"Error during processing: {e}")
@@ -532,15 +509,15 @@ Examples:
     # Required arguments
     parser.add_argument(
         '-i', '--input-dir',
-        required=True,
+        default='property_identifier',
         help='Directory containing new images to add to training dataset'
     )
     
     # Optional arguments
     parser.add_argument(
         '--dataset-dir',
-        default='../data/dataset',
-        help='Path to existing YOLO dataset directory (default: ../data/dataset)'
+        default='model_training/data',
+        help='Path to existing YOLO dataset directory (default: model_training/data)'
     )
     parser.add_argument(
         '--train-ratio',
