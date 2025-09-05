@@ -16,7 +16,8 @@
       "Bash(python3:*)",
       "Bash(python:*)",
       "Bash(tree:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(yolo:*)"
     ],
     "deny": [],
     "ask": []
