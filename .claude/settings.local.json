@@ -15,7 +15,8 @@
       "Bash(venv/Scripts/python.exe:*)",
       "Bash(python3:*)",
       "Bash(python:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -184,6 +184,8 @@ class BuildingNumberDetector:
                         center_x = int((bbox[0][0] + bbox[2][0]) / 2)
                         center_y = int((bbox[0][1] + bbox[2][1]) / 2)
                         result['location'] = (center_x, center_y)
+                        # Also store the full bounding box for annotation creation
+                        result['bbox'] = bbox
                         break
             
             # Step 2: If OCR didn't find a good match and template matching is enabled

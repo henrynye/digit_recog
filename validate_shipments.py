@@ -11,6 +11,9 @@ import shutil
 import re
 import argparse
 import sys
+import cv2
+import json
+import numpy as np
 from pathlib import Path
 from collections import Counter
 from typing import Optional, List, Dict, Tuple
@@ -136,7 +139,7 @@ class ShipmentValidator:
         number_counts = Counter(address_numbers)
         print(f"Most common address numbers: {number_counts.most_common(10)}")
     
-    def validate_shipment(self, shipment_uid: str, shipment_data: Dict) -> bool:
+    def validate_shipment(self, shipment_uid: str, shipment_data: Dict) -> Optional[Dict]:
         """
         Validate a single shipment by checking if address number appears in images
         
@@ -145,7 +148,15 @@ class ShipmentValidator:
             shipment_data: Dictionary containing address_number and images list
             
         Returns:
-            True if address number found in at least one image, False otherwise
+            Dict with validation results if found, None otherwise
+            Format: {
+                'image_name': str,
+                'bbox': List[List[float]],  # EasyOCR bbox format
+                'image_width': int,
+                'image_height': int,
+                'target_number': str,
+                'confidence': float
+            }
         """
         address_number = shipment_data['address_number']
         images = shipment_data['images']
@@ -176,7 +187,18 @@ class ShipmentValidator:
                 
                 # If number found with reasonable confidence, shipment is valid
                 if result['found'] and result['confidence'] > 0.7:
-                    return image_name
+                    # Load image to get dimensions for YOLO normalization
+                    image = cv2.imread(str(image_path))
+                    if image is not None:
+                        height, width = image.shape[:2]
+                        return {
+                            'image_name': image_name,
+                            'bbox': result['bbox'],  # EasyOCR bbox format
+                            'image_width': width,
+                            'image_height': height,
+                            'target_number': address_number,
+                            'confidence': result['confidence']
+                        }
                     
             except Exception as e:
                 error_msg = f"Error processing {image_path}: {e}"
@@ -194,10 +216,14 @@ class ShipmentValidator:
         invalid_count = 0
         
         for shipment_uid, shipment_data in tqdm(self.shipment_data.items(), desc="Validating shipments"):
-            valid_image_name = self.validate_shipment(shipment_uid, shipment_data)
-            self.validation_results[shipment_uid] = valid_image_name
+            validation_result = self.validate_shipment(shipment_uid, shipment_data)
+            self.validation_results[shipment_uid] = validation_result
             
-            if valid_image_name is not None:
+            if validation_result is not None:
+                if valid_count == 0:
+                    # Test JSON serialization with one entry first
+                    self.save_bbox_data(test_mode=True)
+                    
                 valid_count += 1
             else:
                 invalid_count += 1
@@ -231,11 +257,11 @@ class ShipmentValidator:
         
         copy_stats = Counter()
         
-        for shipment_uid, valid_image_name in tqdm(self.validation_results.items(), desc="Copying directories"):
+        for shipment_uid, validation_result in tqdm(self.validation_results.items(), desc="Copying directories"):
             source_dir = self.images_dir / shipment_uid
             
             # Determine destination
-            if valid_image_name is not None:
+            if validation_result is not None:
                 dest_dir = self.valid_dir / shipment_uid
                 copy_stats['valid'] += 1
             else:
@@ -296,18 +322,28 @@ class ShipmentValidator:
             f.write("Detailed Results:\n")
             f.write("-" * 30 + "\n")
             
-            for shipment_uid, valid_image_name in self.validation_results.items():
+            for shipment_uid, validation_result in self.validation_results.items():
                 shipment_data = self.shipment_data[shipment_uid]
-                status = "VALID" if valid_image_name is not None else "INVALID"
+                status = "VALID" if validation_result is not None else "INVALID"
                 address_num = shipment_data['address_number']
                 address_line_1 = shipment_data['address_line_1']
                 num_images = len(shipment_data['images'])
-                valid_image_name = valid_image_name if valid_image_name is not None else "None"
-                f.write(f"{shipment_uid}: {status}\n")
-                f.write(f"  Address number: {address_num}\n")
-                f.write(f"  Address: {address_line_1}\n")
-                f.write(f"  Valid image: {valid_image_name}\n")
-                f.write(f"  Images: {num_images}\n\n")
+                
+                if validation_result is not None:
+                    valid_image_name = validation_result['image_name']
+                    confidence = validation_result['confidence']
+                    f.write(f"{shipment_uid}: {status}\n")
+                    f.write(f"  Address number: {address_num}\n")
+                    f.write(f"  Address: {address_line_1}\n")
+                    f.write(f"  Valid image: {valid_image_name}\n")
+                    f.write(f"  Confidence: {confidence:.3f}\n")
+                    f.write(f"  Images: {num_images}\n\n")
+                else:
+                    f.write(f"{shipment_uid}: {status}\n")
+                    f.write(f"  Address number: {address_num}\n")
+                    f.write(f"  Address: {address_line_1}\n")
+                    f.write(f"  Valid image: None\n")
+                    f.write(f"  Images: {num_images}\n\n")
 
             
             # Errors
@@ -319,20 +355,88 @@ class ShipmentValidator:
         
         print(f"Results summary saved to {results_file}")
     
+    def convert_numpy_types(self, obj):
+        """Convert NumPy types to Python native types for JSON serialization"""
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {key: self.convert_numpy_types(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self.convert_numpy_types(item) for item in obj]
+        return obj
+    
+    def save_bbox_data(self, test_mode=False):
+        """Save bounding box data for annotation creation"""
+        bbox_file = self.output_dir / "bbox_data.json"
+        
+        if test_mode:
+            print(f"Testing JSON serialization with one entry to {bbox_file}...")
+        else:
+            print(f"Saving bounding box data to {bbox_file}...")
+        
+        bbox_data = {}
+        count = 0
+        for shipment_uid, validation_result in self.validation_results.items():
+            if validation_result is not None:
+                # Create the image filename that will be used in training
+                image_name = validation_result['image_name']
+                training_filename = f"{shipment_uid}_{image_name}"
+                
+                bbox_data[training_filename] = {
+                    'bbox': validation_result['bbox'],
+                    'image_width': validation_result['image_width'],
+                    'image_height': validation_result['image_height'],
+                    'target_number': validation_result['target_number'],
+                    'confidence': validation_result['confidence'],
+                    'shipment_uid': shipment_uid,
+                    'original_image_name': image_name
+                }
+                
+                count += 1
+                # In test mode, save just one entry
+                if test_mode and count == 1:
+                    break
+        
+        if not bbox_data:
+            print("No valid validation results found to save")
+            return
+        
+        # Convert NumPy types to Python native types for JSON serialization
+        bbox_data_converted = self.convert_numpy_types(bbox_data)
+        
+        try:
+            with open(bbox_file, 'w') as f:
+                json.dump(bbox_data_converted, f, indent=2)
+            
+            if test_mode:
+                print(f"✓ JSON serialization test successful! Saved 1 entry")
+                print(f"Test file saved to {bbox_file}")
+            else:
+                print(f"Saved bounding box data for {len(bbox_data)} positive samples")
+                print(f"Bbox data saved to {bbox_file}")
+        except Exception as e:
+            print(f"Error saving bbox data: {e}")
+            raise
+    
     def run_validation(self):
         """Run the complete validation process"""
         try:
             # Load data
             self.load_dataframe()
             self.process_shipments()
+            self.create_output_directories()
             
             # Validate shipments
             self.validate_all_shipments()
             
             # Create outputs
-            self.create_output_directories()
             self.copy_shipment_directories()
             self.save_results_summary()
+            self.save_bbox_data()
             
             print("\nValidation completed successfully!")
             
