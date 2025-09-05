@@ -208,10 +208,10 @@ def main():
     random.seed(42)
     
     # Define paths
-    positive_dir = Path("model_training/data/positive")
-    negative_dir = Path("model_training/data/negative") 
-    annotations_dir = Path("model_training/data/annotations")
-    dataset_dir = Path("model_training/data/yolo_dataset")
+    positive_dir = Path("../archive/positive")
+    negative_dir = Path("../archive/negative") 
+    annotations_dir = Path("../archive/annotations")
+    dataset_dir = Path("../data/dataset")
     
     # Validate inputs
     if not positive_dir.exists():

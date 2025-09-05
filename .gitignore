@@ -2,4 +2,8 @@ venv/*
 predicted_digits/*
 daily_images/*
 shipment_validation/**/*.jpg
-model_training/*
+model_training/**/*.jpg
+model_training/**/*.txt
+model_training/**/*.cache
+**/*.pyc
+**/*.DS_Store

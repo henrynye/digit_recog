@@ -130,8 +130,8 @@ def main():
     # Define paths
     csv_file = Path("training_dataset.csv")
     source_base = Path(".")  # Base directory containing shipment_validation
-    target_positive = Path("model_training/data/positive")
-    target_negative = Path("model_training/data/negative")
+    target_positive = Path("../archive/positive")
+    target_negative = Path("../archive/negative")
     
     # Validate inputs
     if not csv_file.exists():

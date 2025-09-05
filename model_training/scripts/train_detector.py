@@ -24,8 +24,8 @@ def train_detection_model():
         print("Using CPU training")
     
     # Define paths
-    dataset_yaml = Path("model_training/data/yolo_dataset/dataset.yaml")
-    output_dir = Path("model_training/models")
+    dataset_yaml = Path("../data/dataset/dataset.yaml")
+    output_dir = Path("../models")
     
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)

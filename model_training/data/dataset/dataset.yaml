@@ -1,0 +1,11 @@
+# Building Number Detection Dataset
+path: /Users/henrynye/Documents/Repositories/digit_recog/model_training/data/dataset
+train: images/train
+val: images/val
+
+# Number of classes
+nc: 1
+
+# Class names
+names:
+  0: number

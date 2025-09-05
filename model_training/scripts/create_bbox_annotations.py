@@ -202,8 +202,8 @@ def main():
     """Main entry point"""
     # Define paths
     bbox_file = Path("shipment_validation/bbox_data.json")
-    positive_dir = Path("model_training/data/positive")
-    annotations_dir = Path("model_training/data/annotations")
+    positive_dir = Path("../archive/positive")
+    annotations_dir = Path("../archive/annotations")
     
     # Validate inputs
     if not bbox_file.exists():
