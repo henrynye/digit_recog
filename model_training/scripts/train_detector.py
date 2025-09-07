@@ -26,7 +26,7 @@ def train_detection_model():
 
     # Define paths
     dataset_yaml = Path("model_training/data/dataset.yaml")
-    output_dir = Path("../models")
+    output_dir = Path("model_training/models")
 
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -44,13 +44,13 @@ def train_detection_model():
     # Configure training parameters
     train_args = {
         "data": str(dataset_yaml),
-        "epochs": 1,
+        "epochs": 5,
         "imgsz": 640,  # Image size
         "batch": 16,  # Batch size
         "device": "cpu",  # Use available device
         "patience": 10,  # Early stopping patience
         "save_period": 10,  # Save checkpoint every 10 epochs
-        "val": False,  # Enable validation
+        "val": True,  # Enable validation
         "plots": True,  # Generate training plots
         "cache": True,  # Don't cache images (to save memory)
         "workers": 4,  # Number of dataloader workers
@@ -58,8 +58,9 @@ def train_detection_model():
         "name": "building_number_detector",  # Experiment name
         "exist_ok": True,  # Overwrite existing experiment
         "verbose": True,  # Verbose training output
-        "amp": False,  # Disable AMP to fix MPS validation issues
+        "amp": True,  # Disable AMP to fix MPS validation issues
         "seed": 42,  # Reproducible results
+        "rect": True,
     }
 
     print(f"\nTraining configuration:")

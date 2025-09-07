@@ -12,3 +12,4 @@ __pycache__/*
 temp_processing/**/*.jpg
 temp_processing/annotations/*
 model_training/scripts/test_postgres.py
+model_training/**/*.png
