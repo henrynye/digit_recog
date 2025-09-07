@@ -9,3 +9,6 @@ model_training/**/*.cache
 **/*.DS_Store
 property_identifier/*
 __pycache__/*
+temp_processing/**/*.jpg
+temp_processing/annotations/*
+model_training/scripts/test_postgres.py
