@@ -1,0 +1,12 @@
+# Test Dataset for Building Number Detection (100 samples)
+path: /Users/henrynye/Documents/Repositories/digit_recog/model_training/data/test_dataset
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 1
+
+# Class names
+names:
+  0: number
